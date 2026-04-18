@@ -1,0 +1,240 @@
+:root {
+  --bg: #f4efe7;
+  --panel: rgba(255, 252, 247, 0.9);
+  --ink: #1f2328;
+  --muted: #6f665f;
+  --accent: #bb5a2a;
+  --accent-strong: #8c3d17;
+  --line: rgba(58, 40, 22, 0.14);
+  --shadow: 0 18px 45px rgba(79, 48, 17, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top right, rgba(187, 90, 42, 0.2), transparent 28%),
+    linear-gradient(180deg, #fbf7f1 0%, var(--bg) 100%);
+}
+
+.layout {
+  width: min(1200px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 40px 0 64px;
+}
+
+.hero {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+h1,
+h2,
+figcaption {
+  font-family: "Avenir Next", "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.lead,
+.hint,
+.summary {
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.input-panel,
+.controls,
+.previews {
+  padding: 22px;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.upload {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  cursor: pointer;
+}
+
+.upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.controls h2,
+.previews h2 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+}
+
+.controls h2:not(:first-child) {
+  margin-top: 26px;
+}
+
+.control-grid {
+  display: grid;
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+input[type="range"],
+input[type="number"] {
+  width: 100%;
+}
+
+input[type="number"] {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+
+input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+}
+
+output {
+  justify-self: end;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+button {
+  min-height: 46px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+figure {
+  margin: 0;
+}
+
+figcaption {
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+canvas,
+.svg-stage {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(45deg, rgba(0, 0, 0, 0.04) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.04) 75%),
+    linear-gradient(45deg, rgba(0, 0, 0, 0.04) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.04) 75%),
+    white;
+  background-size: 18px 18px;
+  background-position: 0 0, 9px 9px;
+}
+
+.svg-stage {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+}
+
+.svg-stage svg {
+  width: 100%;
+  height: 100%;
+}
+
+.svg-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.summary {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(187, 90, 42, 0.08);
+}
+
+@media (max-width: 920px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-grid {
+    grid-template-columns: 1fr;
+  }
+}

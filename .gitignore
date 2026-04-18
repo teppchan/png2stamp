@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Generated stamp outputs
+stamp_art.svg
+stamp_model.stl
+stamp_model.scad
+
+# Common export variants
+*.3mf
+*.gcode
+
+# Local debug artifacts
+*.log

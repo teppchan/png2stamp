@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PNG to Stamp</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="hero">
+        <p class="eyebrow">PNG to 3D Stamp</p>
+        <h1>子供の絵からスタンプ用データを作る</h1>
+        <p class="lead">
+          紙に描いた絵をPNGとして読み込み、2値化と簡易ノイズ除去をしてから
+          SVGとSTLを直接作成します。必要な場合だけOpenSCADファイルも保存できます。
+        </p>
+      </section>
+
+      <section class="panel input-panel">
+        <div class="panel-title-row">
+          <h2>1. PNGを読み込む</h2>
+          <label class="upload">
+            <input id="fileInput" type="file" accept="image/png,image/*" />
+            <span>画像を選ぶ</span>
+          </label>
+        </div>
+        <p class="hint">
+          白地に濃い線の絵がおすすめです。最終的なスタンプは左右反転されます。
+        </p>
+      </section>
+
+      <section class="workspace">
+        <section class="panel controls">
+          <h2>2. 加工設定</h2>
+          <div class="control-grid">
+            <label>
+              <span>しきい値</span>
+              <input id="threshold" type="range" min="0" max="255" value="180" />
+              <output id="thresholdValue">180</output>
+            </label>
+            <label>
+              <span>前景を反転</span>
+              <input id="invert" type="checkbox" />
+            </label>
+            <label>
+              <span>ノイズ除去回数</span>
+              <input id="despeckle" type="range" min="0" max="4" value="1" />
+              <output id="despeckleValue">1</output>
+            </label>
+            <label>
+              <span>太らせる回数</span>
+              <input id="dilate" type="range" min="0" max="4" value="1" />
+              <output id="dilateValue">1</output>
+            </label>
+            <label>
+              <span>細らせる回数</span>
+              <input id="erode" type="range" min="0" max="4" value="0" />
+              <output id="erodeValue">0</output>
+            </label>
+            <label>
+              <span>処理用の最大幅(px)</span>
+              <input id="maxSize" type="range" min="128" max="1200" step="16" value="512" />
+              <output id="maxSizeValue">512</output>
+            </label>
+          </div>
+
+          <h2>3. スタンプ形状</h2>
+          <div class="control-grid">
+            <label>
+              <span>スタンプ幅(mm)</span>
+              <input id="stampWidth" type="number" min="20" max="120" value="40" />
+            </label>
+            <label>
+              <span>ベース厚(mm)</span>
+              <input id="baseThickness" type="number" min="1" max="8" step="0.2" value="2.4" />
+            </label>
+            <label>
+              <span>模様の高さ(mm)</span>
+              <input id="reliefHeight" type="number" min="0.6" max="5" step="0.2" value="1.6" />
+            </label>
+            <label>
+              <span>外枠の幅(mm)</span>
+              <input id="rimWidth" type="number" min="0" max="8" step="0.2" value="1.2" />
+            </label>
+            <label>
+              <span>余白(mm)</span>
+              <input id="padding" type="number" min="0" max="10" step="0.2" value="2" />
+            </label>
+            <label>
+              <span>左右反転して出力</span>
+              <input id="mirrorX" type="checkbox" checked />
+            </label>
+          </div>
+
+          <h2>4. 持ち手</h2>
+          <div class="control-grid">
+            <label>
+              <span>持ち手の幅(mm)</span>
+              <input id="handleWidth" type="number" min="8" max="60" step="0.5" value="18" />
+            </label>
+            <label>
+              <span>持ち手の奥行(mm)</span>
+              <input id="handleDepth" type="number" min="8" max="60" step="0.5" value="18" />
+            </label>
+            <label>
+              <span>持ち手の高さ(mm)</span>
+              <input id="handleHeight" type="number" min="6" max="40" step="0.5" value="16" />
+            </label>
+            <label>
+              <span>首の高さ(mm)</span>
+              <input id="neckHeight" type="number" min="0" max="20" step="0.5" value="6" />
+            </label>
+            <label>
+              <span>首の幅(mm)</span>
+              <input id="neckWidth" type="number" min="4" max="30" step="0.5" value="10" />
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="downloadSvg" disabled>SVGを保存</button>
+            <button id="downloadStl" disabled>STLを保存</button>
+            <button id="downloadScad" disabled>OpenSCADを保存</button>
+          </div>
+        </section>
+
+        <section class="panel previews">
+          <h2>プレビュー</h2>
+          <div class="preview-grid">
+            <figure>
+              <figcaption>元画像</figcaption>
+              <canvas id="sourceCanvas" width="320" height="320"></canvas>
+            </figure>
+            <figure>
+              <figcaption>2値化後</figcaption>
+              <canvas id="processedCanvas" width="320" height="320"></canvas>
+            </figure>
+            <figure class="svg-preview">
+              <figcaption>SVGイメージ</figcaption>
+              <div id="svgPreview" class="svg-stage"></div>
+            </figure>
+          </div>
+          <div id="summary" class="summary">
+            画像を読み込むと、ここに出力サイズと処理内容を表示します。
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
