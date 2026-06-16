@@ -50,21 +50,23 @@
               <span>前景を反転</span>
               <input id="invert" type="checkbox" />
             </label>
-            <label>
-              <span>ノイズ除去回数</span>
-              <input id="despeckle" type="range" min="0" max="4" value="1" />
-              <output id="despeckleValue">1</output>
-            </label>
-            <label>
-              <span>太らせる回数</span>
-              <input id="dilate" type="range" min="0" max="4" value="1" />
-              <output id="dilateValue">1</output>
-            </label>
-            <label>
-              <span>細らせる回数</span>
-              <input id="erode" type="range" min="0" max="4" value="0" />
-              <output id="erodeValue">0</output>
-            </label>
+            <div id="binarySettings" class="mode-settings">
+              <label>
+                <span>ノイズ除去回数</span>
+                <input id="despeckle" type="range" min="0" max="4" value="1" />
+                <output id="despeckleValue">1</output>
+              </label>
+              <label>
+                <span>太らせる回数</span>
+                <input id="dilate" type="range" min="0" max="4" value="1" />
+                <output id="dilateValue">1</output>
+              </label>
+              <label>
+                <span>細らせる回数</span>
+                <input id="erode" type="range" min="0" max="4" value="0" />
+                <output id="erodeValue">0</output>
+              </label>
+            </div>
             <label>
               <span>処理用の最大幅(px)</span>
               <input id="maxSize" type="range" min="128" max="1200" step="16" value="512" />
