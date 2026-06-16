@@ -3,6 +3,7 @@ const elements = {
   processingMode: document.getElementById("processingMode"),
   binarySettings: document.getElementById("binarySettings"),
   threshold: document.getElementById("threshold"),
+  thresholdLabel: document.getElementById("thresholdLabel"),
   thresholdValue: document.getElementById("thresholdValue"),
   invert: document.getElementById("invert"),
   despeckle: document.getElementById("despeckle"),
@@ -99,6 +100,7 @@ function initializeControls() {
 
 function updateProcessingModeControls() {
   const isBinary = elements.processingMode.value === "binary";
+  elements.thresholdLabel.textContent = isBinary ? "しきい値" : "濃淡の基準";
   elements.binarySettings.hidden = !isBinary;
   elements.binarySettings.setAttribute("aria-hidden", String(!isBinary));
 
