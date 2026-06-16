@@ -1,6 +1,7 @@
 const elements = {
   fileInput: document.getElementById("fileInput"),
   processingMode: document.getElementById("processingMode"),
+  binarySettings: document.getElementById("binarySettings"),
   threshold: document.getElementById("threshold"),
   thresholdValue: document.getElementById("thresholdValue"),
   invert: document.getElementById("invert"),
@@ -86,12 +87,24 @@ function initializeControls() {
     input.addEventListener("change", regenerate);
   });
 
+  elements.processingMode.addEventListener("change", updateProcessingModeControls);
   elements.fileInput.addEventListener("change", handleFileSelect);
   elements.downloadSvg.addEventListener("click", () => {
     downloadText("stamp_art.svg", state.svgText, "image/svg+xml");
   });
   elements.downloadStl.addEventListener("click", handleStlDownload);
   elements.downloadScad.addEventListener("click", handleScadDownload);
+  updateProcessingModeControls();
+}
+
+function updateProcessingModeControls() {
+  const isBinary = elements.processingMode.value === "binary";
+  elements.binarySettings.hidden = !isBinary;
+  elements.binarySettings.setAttribute("aria-hidden", String(!isBinary));
+
+  [elements.despeckle, elements.dilate, elements.erode].forEach((input) => {
+    input.disabled = !isBinary;
+  });
 }
 
 function handleFileSelect(event) {
@@ -321,6 +334,10 @@ function clamp(value, min, max) {
 
 function postProcessMask(inputMask, width, height, settings) {
   let mask = new Uint8Array(inputMask);
+
+  if (settings.processingMode === "dither") {
+    return mask;
+  }
 
   for (let pass = 0; pass < settings.despeckle; pass += 1) {
     mask = despeckle(mask, width, height);
