@@ -1,5 +1,6 @@
 const elements = {
   fileInput: document.getElementById("fileInput"),
+  processingMode: document.getElementById("processingMode"),
   threshold: document.getElementById("threshold"),
   thresholdValue: document.getElementById("thresholdValue"),
   invert: document.getElementById("invert"),
@@ -24,6 +25,7 @@ const elements = {
   neckWidth: document.getElementById("neckWidth"),
   sourceCanvas: document.getElementById("sourceCanvas"),
   processedCanvas: document.getElementById("processedCanvas"),
+  processedCaption: document.getElementById("processedCaption"),
   svgPreview: document.getElementById("svgPreview"),
   downloadSvg: document.getElementById("downloadSvg"),
   downloadStl: document.getElementById("downloadStl"),
@@ -66,6 +68,7 @@ function initializeControls() {
   });
 
   [
+    elements.processingMode,
     elements.invert,
     elements.stampWidth,
     elements.baseThickness,
@@ -142,11 +145,11 @@ function regenerate() {
 
   state.processedMask = mask;
   state.processedSize = { width: processed.width, height: processed.height };
+  state.settings = settings;
 
   drawProcessedMask(mask, processed.width, processed.height);
 
   const svgData = generateSvg(mask, processed.width, processed.height, settings);
-  state.settings = settings;
   state.svgMeta = svgData.meta;
   state.svgText = svgData.text;
   state.stlText = "";
@@ -217,6 +220,7 @@ function setBusy(button, busy, label) {
 
 function getSettings() {
   return {
+    processingMode: elements.processingMode.value,
     threshold: Number(elements.threshold.value),
     invert: elements.invert.checked,
     despeckle: Number(elements.despeckle.value),
@@ -248,21 +252,71 @@ function buildMaskFromImage(image, settings) {
   const context = canvas.getContext("2d");
   context.drawImage(image, 0, 0, width, height);
 
-  const imageData = context.getImageData(0, 0, width, height).data;
-  const mask = new Uint8Array(width * height);
+  const grayValues = getGrayscaleValues(context.getImageData(0, 0, width, height).data);
+  const mask =
+    settings.processingMode === "dither"
+      ? buildDitherMask(grayValues, width, height, settings)
+      : buildBinaryMask(grayValues, settings);
 
-  for (let index = 0; index < width * height; index += 1) {
+  return { mask, width, height };
+}
+
+function getGrayscaleValues(imageData) {
+  const grayValues = new Float32Array(imageData.length / 4);
+  for (let index = 0; index < grayValues.length; index += 1) {
     const offset = index * 4;
     const r = imageData[offset];
     const g = imageData[offset + 1];
     const b = imageData[offset + 2];
     const a = imageData[offset + 3] / 255;
-    const gray = (0.299 * r + 0.587 * g + 0.114 * b) * a + 255 * (1 - a);
+    grayValues[index] = (0.299 * r + 0.587 * g + 0.114 * b) * a + 255 * (1 - a);
+  }
+  return grayValues;
+}
+
+function buildBinaryMask(grayValues, settings) {
+  const mask = new Uint8Array(grayValues.length);
+  for (let index = 0; index < grayValues.length; index += 1) {
+    const gray = grayValues[index];
     const isDark = gray < settings.threshold;
     mask[index] = settings.invert ? Number(!isDark) : Number(isDark);
   }
 
-  return { mask, width, height };
+  return mask;
+}
+
+function buildDitherMask(grayValues, width, height, settings) {
+  const values = new Float32Array(grayValues);
+  const mask = new Uint8Array(values.length);
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const index = y * width + x;
+      const oldGray = clamp(values[index], 0, 255);
+      const isDark = oldGray < settings.threshold;
+      const newGray = isDark ? 0 : 255;
+      const error = oldGray - newGray;
+
+      mask[index] = settings.invert ? Number(!isDark) : Number(isDark);
+      spreadDitherError(values, width, height, x + 1, y, error * (7 / 16));
+      spreadDitherError(values, width, height, x - 1, y + 1, error * (3 / 16));
+      spreadDitherError(values, width, height, x, y + 1, error * (5 / 16));
+      spreadDitherError(values, width, height, x + 1, y + 1, error * (1 / 16));
+    }
+  }
+
+  return mask;
+}
+
+function spreadDitherError(values, width, height, x, y, error) {
+  if (x < 0 || y < 0 || x >= width || y >= height) {
+    return;
+  }
+  values[y * width + x] += error;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function postProcessMask(inputMask, width, height, settings) {
@@ -356,6 +410,9 @@ function countNeighbors(mask, width, height, x, y) {
 }
 
 function drawProcessedMask(mask, width, height) {
+  elements.processedCaption.textContent =
+    state.settings?.processingMode === "dither" ? "ディザ後" : "2値化後";
+
   const imageData = processedContext.createImageData(width, height);
   for (let index = 0; index < mask.length; index += 1) {
     const value = mask[index] ? 0 : 255;
@@ -752,6 +809,7 @@ function buildSummary(meta, settings) {
   }
 
   return [
+    `変換方式は ${settings.processingMode === "dither" ? "ディザ" : "2値化"} です。`,
     `加工後サイズは ${meta.totalWidth.toFixed(1)}mm x ${meta.totalHeight.toFixed(1)}mm です。`,
     `模様部分の高さは ${settings.reliefHeight.toFixed(1)}mm、ベース厚は ${settings.baseThickness.toFixed(
       1
