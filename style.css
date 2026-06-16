@@ -129,16 +129,22 @@ label {
 }
 
 input[type="range"],
-input[type="number"] {
+input[type="number"],
+select {
   width: 100%;
 }
 
-input[type="number"] {
+input[type="number"],
+select {
   min-height: 42px;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: white;
+}
+
+select {
+  color: var(--ink);
 }
 
 input[type="checkbox"] {
