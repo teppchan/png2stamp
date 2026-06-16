@@ -122,6 +122,15 @@ h1 {
   gap: 14px;
 }
 
+.mode-settings {
+  display: grid;
+  gap: 14px;
+}
+
+.mode-settings[hidden] {
+  display: none;
+}
+
 label {
   display: grid;
   gap: 8px;
