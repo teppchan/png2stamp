@@ -35,6 +35,13 @@
           <h2>2. 加工設定</h2>
           <div class="control-grid">
             <label>
+              <span>変換方式</span>
+              <select id="processingMode">
+                <option value="binary">2値化</option>
+                <option value="dither">ディザ</option>
+              </select>
+            </label>
+            <label>
               <span>しきい値</span>
               <input id="threshold" type="range" min="0" max="255" value="180" />
               <output id="thresholdValue">180</output>
@@ -132,7 +139,7 @@
               <canvas id="sourceCanvas" width="320" height="320"></canvas>
             </figure>
             <figure>
-              <figcaption>2値化後</figcaption>
+              <figcaption id="processedCaption">2値化後</figcaption>
               <canvas id="processedCanvas" width="320" height="320"></canvas>
             </figure>
             <figure class="svg-preview">
