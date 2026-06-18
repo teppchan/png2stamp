@@ -2,10 +2,13 @@ const elements = {
   fileInput: document.getElementById("fileInput"),
   processingMode: document.getElementById("processingMode"),
   binarySettings: document.getElementById("binarySettings"),
+  ditherSettings: document.getElementById("ditherSettings"),
   threshold: document.getElementById("threshold"),
   thresholdLabel: document.getElementById("thresholdLabel"),
   thresholdValue: document.getElementById("thresholdValue"),
   invert: document.getElementById("invert"),
+  ditherPixelSize: document.getElementById("ditherPixelSize"),
+  ditherPixelSizeValue: document.getElementById("ditherPixelSizeValue"),
   despeckle: document.getElementById("despeckle"),
   despeckleValue: document.getElementById("despeckleValue"),
   dilate: document.getElementById("dilate"),
@@ -57,6 +60,7 @@ function setOutputValue(input, output) {
 function initializeControls() {
   [
     [elements.threshold, elements.thresholdValue],
+    [elements.ditherPixelSize, elements.ditherPixelSizeValue],
     [elements.despeckle, elements.despeckleValue],
     [elements.dilate, elements.dilateValue],
     [elements.erode, elements.erodeValue],
@@ -103,10 +107,13 @@ function updateProcessingModeControls() {
   elements.thresholdLabel.textContent = isBinary ? "しきい値" : "濃淡の基準";
   elements.binarySettings.hidden = !isBinary;
   elements.binarySettings.setAttribute("aria-hidden", String(!isBinary));
+  elements.ditherSettings.hidden = isBinary;
+  elements.ditherSettings.setAttribute("aria-hidden", String(isBinary));
 
   [elements.despeckle, elements.dilate, elements.erode].forEach((input) => {
     input.disabled = !isBinary;
   });
+  elements.ditherPixelSize.disabled = isBinary;
 }
 
 function handleFileSelect(event) {
@@ -238,6 +245,7 @@ function getSettings() {
     processingMode: elements.processingMode.value,
     threshold: Number(elements.threshold.value),
     invert: elements.invert.checked,
+    ditherPixelSize: Number(elements.ditherPixelSize.value),
     despeckle: Number(elements.despeckle.value),
     dilate: Number(elements.dilate.value),
     erode: Number(elements.erode.value),
@@ -301,6 +309,11 @@ function buildBinaryMask(grayValues, settings) {
 }
 
 function buildDitherMask(grayValues, width, height, settings) {
+  const blockSize = Math.max(1, Math.round(settings.ditherPixelSize));
+  if (blockSize > 1) {
+    return buildBlockDitherMask(grayValues, width, height, settings, blockSize);
+  }
+
   const values = new Float32Array(grayValues);
   const mask = new Uint8Array(values.length);
 
@@ -317,6 +330,54 @@ function buildDitherMask(grayValues, width, height, settings) {
       spreadDitherError(values, width, height, x - 1, y + 1, error * (3 / 16));
       spreadDitherError(values, width, height, x, y + 1, error * (5 / 16));
       spreadDitherError(values, width, height, x + 1, y + 1, error * (1 / 16));
+    }
+  }
+
+  return mask;
+}
+
+function buildBlockDitherMask(grayValues, width, height, settings, blockSize) {
+  const blockWidth = Math.ceil(width / blockSize);
+  const blockHeight = Math.ceil(height / blockSize);
+  const blockValues = new Float32Array(blockWidth * blockHeight);
+
+  for (let blockY = 0; blockY < blockHeight; blockY += 1) {
+    for (let blockX = 0; blockX < blockWidth; blockX += 1) {
+      let total = 0;
+      let count = 0;
+      const startX = blockX * blockSize;
+      const startY = blockY * blockSize;
+      const endX = Math.min(width, startX + blockSize);
+      const endY = Math.min(height, startY + blockSize);
+
+      for (let y = startY; y < endY; y += 1) {
+        for (let x = startX; x < endX; x += 1) {
+          total += grayValues[y * width + x];
+          count += 1;
+        }
+      }
+
+      blockValues[blockY * blockWidth + blockX] = total / count;
+    }
+  }
+
+  const blockMask = buildDitherMask(blockValues, blockWidth, blockHeight, {
+    ...settings,
+    ditherPixelSize: 1,
+  });
+  const mask = new Uint8Array(width * height);
+
+  for (let blockY = 0; blockY < blockHeight; blockY += 1) {
+    for (let blockX = 0; blockX < blockWidth; blockX += 1) {
+      const value = blockMask[blockY * blockWidth + blockX];
+      const startX = blockX * blockSize;
+      const startY = blockY * blockSize;
+      const endX = Math.min(width, startX + blockSize);
+      const endY = Math.min(height, startY + blockSize);
+
+      for (let y = startY; y < endY; y += 1) {
+        mask.fill(value, y * width + startX, y * width + endX);
+      }
     }
   }
 
@@ -829,12 +890,15 @@ function buildSummary(meta, settings) {
 
   return [
     `変換方式は ${settings.processingMode === "dither" ? "ディザ" : "2値化"} です。`,
+    settings.processingMode === "dither" ? `ディザ画素サイズは ${settings.ditherPixelSize}px です。` : "",
     `加工後サイズは ${meta.totalWidth.toFixed(1)}mm x ${meta.totalHeight.toFixed(1)}mm です。`,
     `模様部分の高さは ${settings.reliefHeight.toFixed(1)}mm、ベース厚は ${settings.baseThickness.toFixed(
       1
     )}mm に設定されています。`,
     `STLはブラウザ内で直接生成し、SVGとOpenSCADも必要に応じて保存できます。`,
-  ].join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function downloadText(filename, text, mimeType) {
